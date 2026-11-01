@@ -1,0 +1,6 @@
+{
+  "app": "node --experimental-strip-types bin/app.ts",
+  "output": "cdk.out",
+  "versionReporting": false,
+  "analyticsReporting": false
+}

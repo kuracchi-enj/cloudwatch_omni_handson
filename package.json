@@ -1,0 +1,23 @@
+{
+  "name": "cloudwatch-omni-handson",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Minimal Lambda log investigation hands-on for Amazon CloudWatch Omni",
+  "engines": { "node": ">=24.20.0 <25" },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "test": "node --test test/handler.test.mjs && node --experimental-strip-types --test test/stack.test.ts",
+    "synth": "cdk synth --no-lookups --quiet",
+    "check": "npm run build && npm test && npm run synth",
+    "cdkd": "cdkd"
+  },
+  "devDependencies": {
+    "@go-to-k/cdkd": "0.312.0",
+    "@types/node": "24.19.2",
+    "aws-cdk": "2.1147.0",
+    "aws-cdk-lib": "2.275.0",
+    "constructs": "10.8.1",
+    "typescript": "7.0.2"
+  }
+}
