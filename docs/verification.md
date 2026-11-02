@@ -115,4 +115,14 @@ https://docs.aws.amazon.com/lambda/latest/dg/configuration-concurrency.html
 
 ロールバック後の`cdkd state show`を読み取り確認したところ、管理リソースは0件、ロックはなかった。これはcdkd stateの確認結果であり、アカウント全体のAWSリソースがすべて削除済みという意味ではない。追加のrollbackや再デプロイは実行していない。
 
-修正後の再デプロイ、Lambda Invoke、Omniでのログ検索はまだ未確認。
+修正直後の時点では、再デプロイ、Lambda Invoke、Omniでのログ検索は未確認だった。その後の進捗は以下に追記する。
+
+## 2026-11-03: デプロイ成功とInvoke対象名の設定
+
+利用者から修正後のデプロイ成功が共有された。cdkd stateを読み取り確認し、管理リソース4件と`FunctionName`、`LogGroupName`、`DeploymentRegion`のOutputsを確認した。
+
+続いて、説明用の文字列を`FUNCTION_NAME`にそのまま設定したInvokeが、関数名の形式チェックで拒否された。これは関数が処理を開始する前の入力エラー。その後、利用者から実際の関数名を指定すると呼び出せたことが共有された。
+
+READMEとART.mdの手順を、cdkd stateの`state.outputs.FunctionName`から関数名を取得する形へ変更した。READMEから設定コマンドをそのまま取り出してzshで読み取り実行し、有効な関数名を取得できたことを確認した。公開用のコードに実環境の関数名は含めない。エージェントは今回Lambda Invokeを実行していない。
+
+シナリオごとの戻り値、CloudWatch Logsへのログ到着、Dataset転送、Omniでの検索結果はまだ確認していない。

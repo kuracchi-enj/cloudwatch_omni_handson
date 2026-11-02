@@ -90,15 +90,21 @@ cdkdの出力から`FunctionName`と`LogGroupName`を控える。認証や設定
 
 ## 5. デプロイ後にログを出す
 
-次は利用者がdeployした後の手順。`FUNCTION_NAME`には出力された`FunctionName`を設定する。
+次は利用者がdeployした後の手順。`FUNCTION_NAME`は、cdkdの管理情報から実際の関数名を取得して設定する。デプロイ時と同じAWSプロファイル・リージョンを使用する。
 
 ```bash
-export FUNCTION_NAME='デプロイ出力のFunctionName'
+export FUNCTION_NAME="$(
+  cdkd state show CloudWatchOmniHandsonStack --json |
+    node -p 'JSON.parse(require("node:fs").readFileSync(0, "utf8")).state.outputs.FunctionName'
+)"
+printf '%s\n' "$FUNCTION_NAME"
 mkdir -p .local
 aws lambda invoke --function-name "$FUNCTION_NAME" --payload fileb://events/success.json .local/success-response.json
 aws lambda invoke --function-name "$FUNCTION_NAME" --payload fileb://events/warning.json .local/warning-response.json
 aws lambda invoke --function-name "$FUNCTION_NAME" --payload fileb://events/error.json .local/error-response.json
 ```
+
+表示された`FUNCTION_NAME`が実際のLambda関数名であることを確認する。手入力する場合も、説明文ではなくデプロイ結果の`FunctionName`の値を使う。
 
 | scenario | アプリログ | Lambdaの実行結果 |
 | --- | --- | --- |
