@@ -16,7 +16,7 @@ CloudWatch Omniは、CloudWatchのテレメトリーを専用UIやAIアシスタ
 - Node.js 24のLambda 1個。外部依存、公開URL、自動実行なし。
 - 専用CloudWatch Logsロググループ1個。Standard、7日保持、削除時に元ロググループも削除。
 - そのロググループへの書込だけを許可するLambda実行ロール。
-- 同時実行数1、タイムアウト5秒、メモリ128MB。
+- タイムアウト5秒、メモリ128MB。予約済み同時実行数は設定せず、アカウントの共有枠を使用。
 
 既定リージョンは東京（`ap-northeast-1`）。[2026-10-19のAWS発表](https://aws.amazon.com/about-aws/whats-new/2026/10/amazon-cloudwatch-omni-8-regions/)で東京のOmni対応を確認した。
 
@@ -139,7 +139,7 @@ Omni agentには、例えば次のように質問する。対象ロググルー�
 | Omni Space | アカウント・リージョン一致、Dataset連携、アクセス権 |
 | Explore | 時間範囲、ロググループ名、フィルター、到着までの待ち時間 |
 | SQL | まず生レコードを表示し、Browseでフィールドを確認 |
-| Lambda作成時の同時実行数エラー | 検証アカウントのクォータを確認。同時実行数1の予約が不可能な場合は`reservedConcurrentExecutions`を外して再synth |
+| Lambda作成時の同時実行数エラー | 旧コードの`reservedConcurrentExecutions: 1`を削除した版へ更新する。予約には未予約枠を少なくとも100残す必要があるため、今回は予約を行わない |
 
 ## 7. 後片付け
 

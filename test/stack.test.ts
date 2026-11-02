@@ -14,7 +14,6 @@ test('the function delivers JSON logs to its explicitly retained, writable log g
   assert.equal(groups[groupId].DeletionPolicy, 'Delete');
   template.hasResourceProperties('AWS::Lambda::Function', {
     Runtime: 'nodejs24.x',
-    ReservedConcurrentExecutions: 1,
     LoggingConfig: { LogFormat: 'JSON', LogGroup: { Ref: groupId }, ApplicationLogLevel: 'INFO', SystemLogLevel: 'WARN' },
   });
   template.hasResourceProperties('AWS::IAM::Policy', {
@@ -27,6 +26,13 @@ test('the function delivers JSON logs to its explicitly retained, writable log g
   for (const role of Object.values(template.findResources('AWS::IAM::Role'))) {
     assert.equal(role.Properties.ManagedPolicyArns, undefined);
   }
+});
+
+test('the handson does not require capacity for a reserved concurrency allocation', () => {
+  const template = Template.fromStack(new CloudWatchOmniHandsonStack(new App(), 'LowQuotaStack'));
+  template.hasResourceProperties('AWS::Lambda::Function', {
+    ReservedConcurrentExecutions: Match.absent(),
+  });
 });
 
 test('the stack adds no public invocation or automatic trigger and no account-level Omni settings', () => {

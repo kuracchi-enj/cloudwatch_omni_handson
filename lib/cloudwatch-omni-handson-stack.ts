@@ -35,7 +35,6 @@ export class CloudWatchOmniHandsonStack extends Stack {
       systemLogLevelV2: lambda.SystemLogLevel.WARN,
       timeout: Duration.seconds(5),
       memorySize: 128,
-      reservedConcurrentExecutions: 1,
     });
 
     new CfnOutput(this, 'FunctionName', { value: fn.functionName });

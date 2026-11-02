@@ -1,6 +1,6 @@
 # 検証結果
 
-検証日: 2026-11-01。実装・ローカル検証・AWSで行った事前準備を分けて記録する。アカウントID、実ARN、プロファイル名、管理リソース名、実行ログは公開しない。
+初回検証日: 2026-11-01。2026-11-03のデプロイ失敗と修正を末尾に追記。実装・ローカル検証・AWSで行った事前準備を分けて記録する。アカウントID、実ARN、プロファイル名、管理リソース名、実行ログは公開しない。
 
 ## ツールと依存
 
@@ -16,7 +16,7 @@
 
 直接依存を固定し、`package-lock.json`で解決結果も保存した。インストール時には`--ignore-scripts`を使用した。
 
-## ローカルで確認したこと
+## 2026-11-01にローカルで確認したこと
 
 | 検証 | 結果 |
 | --- | --- |
@@ -65,7 +65,7 @@ env -u AWS_PROFILE -u AWS_DEFAULT_PROFILE -u AWS_SESSION_TOKEN \
 
 この結果はテンプレート生成とcdkdによる読込の証拠。Lambda作成、ログ配送、Dataset転送、Omni上でのクエリ成功の証拠ではない。
 
-## AWSで確認・準備したこと
+## 2026-11-01にAWSで確認・準備したこと
 
 - 利用者指定のプロファイルで、東京リージョンのSTS認証を確認した。
 - 既存のcdkd stateバケットにアクセスできることを確認した。
@@ -91,7 +91,7 @@ CloudWatch Logsの元ロググループを削除しても、Omni Datasetに転�
 
 公開対象22ファイルに対し、AWSアクセスキー形式、秘密鍵、主要トークン形式、12桁のアカウント値、ローカルの絶対パス、利用者指定プロファイル名を確認し、検出0件だった。`.local/`、`node_modules/`、`cdk.out/`はGit管理から除外した。これは特定パターンの確認結果であり、任意の秘密情報を完全に検出できるという意味ではない。
 
-## 未実施・次に行うこと
+## 2026-11-01時点の未実施事項
 
 1. CloudWatchコンソールで、東京のAccount domain／SpaceとDataset連携、利用者のアクセスを設定する。
 2. `cdkd deploy CloudWatchOmniHandsonStack`を実行する。
@@ -100,3 +100,19 @@ CloudWatch Logsの元ロググループを削除しても、Omni Datasetに転�
 5. 利用後、スタックと今回作ったOmni側の設定を、それぞれ管理範囲を確認して片付ける。
 
 `cdkd deploy`、asset publish、Lambda Invoke、Omni有効化、照会、destroyは実行していない。実環境での権限、同時実行数クォータ、プロバイダー互換性、データ到着の成否はデプロイ後の確認が必要。
+
+## 2026-11-03: 初回デプロイ失敗と予約済み同時実行数の修正
+
+利用者から、OmniのSpaceへアクセスできたことと、初回の`cdkd deploy`結果が共有された。ロググループとIAM Role／Policyの作成後、Lambdaの`PutFunctionConcurrency`で`InvalidParameterValueException`になり、cdkdが作成済み3リソースをロールバックした。出力には、部分作成したLambdaも削除したと記録されている。これは利用者が共有した実行結果であり、こちらで再デプロイして再現したものではない。
+
+原因確認として、指定済みプロファイルで東京の`GetAccountSettings`を読み取り実行した。同時実行数上限は10、未予約枠も10だった。AWSの仕様では予約設定後も未予約枠を少なくとも100残す必要があり、`reservedConcurrentExecutions: 1`を設定できない。IAM伝播のリトライ回数が表示されていても、この予約容量の制約は待機では解消しない。
+
+https://docs.aws.amazon.com/lambda/latest/dg/configuration-concurrency.html
+
+手動で実行するハンズオンには予約容量が不要なので、スタックの`reservedConcurrentExecutions`を削除した。Lambdaはアカウントの共有枠を使用し、この関数単独の同時実行数上限1は設定しない。公開URLや自動起動は引き続き追加しない。
+
+生成テンプレートに`ReservedConcurrentExecutions`がないことを確認する回帰テストを追加し、変更前のコードで失敗することを確認した。修正後は型検査、handlerの4テストとCDKの3テスト、CDK synth、cdkdによる事前生成済みCloud Assemblyの読込がすべて成功した。実際のテンプレートから予約設定がなくなったことも確認した。
+
+ロールバック後の`cdkd state show`を読み取り確認したところ、管理リソースは0件、ロックはなかった。これはcdkd stateの確認結果であり、アカウント全体のAWSリソースがすべて削除済みという意味ではない。追加のrollbackや再デプロイは実行していない。
+
+修正後の再デプロイ、Lambda Invoke、Omniでのログ検索はまだ未確認。
